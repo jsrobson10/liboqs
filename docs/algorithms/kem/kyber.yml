@@ -17,7 +17,8 @@ website: https://pq-crystals.org/
 nist-round: 3
 spec-version: NIST Round 3 submission
 spdx-license-identifier: CC0-1.0
-upstream: https://github.com/pq-crystals/kyber/commit/fd83229e9dcc7c235a5ea8bb320d1fbade812452 with copy_from_upstream patches
+upstream: https://github.com/pq-crystals/kyber/commit/fd83229e9dcc7c235a5ea8bb320d1fbade812452
+  with copy_from_upstream_patches
 parameter-sets:
 - name: Kyber512
   claimed-nist-level: 1
@@ -42,9 +43,9 @@ parameter-sets:
       - Linux
       - Darwin
       required_flags:
+      - popcnt
       - avx2
       - bmi2
-      - popcnt
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
@@ -74,10 +75,12 @@ parameter-sets:
       - Linux
       - Darwin
       required_flags:
-      - aes
-      - avx2
-      - bmi2
       - popcnt
+      - sse2
+      - avx2
+      - aes
+      - ssse3
+      - bmi2
     common-crypto:
     - AES: pqcrystals-kyber_common_aes
     - SHA3: liboqs
@@ -107,9 +110,9 @@ parameter-sets:
       - Linux
       - Darwin
       required_flags:
+      - popcnt
       - avx2
       - bmi2
-      - popcnt
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
@@ -139,10 +142,12 @@ parameter-sets:
       - Linux
       - Darwin
       required_flags:
-      - aes
-      - avx2
-      - bmi2
       - popcnt
+      - sse2
+      - avx2
+      - aes
+      - ssse3
+      - bmi2
     common-crypto:
     - AES: pqcrystals-kyber_common_aes
     - SHA3: liboqs
@@ -172,9 +177,9 @@ parameter-sets:
       - Linux
       - Darwin
       required_flags:
+      - popcnt
       - avx2
       - bmi2
-      - popcnt
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
@@ -204,10 +209,12 @@ parameter-sets:
       - Linux
       - Darwin
       required_flags:
-      - aes
-      - avx2
-      - bmi2
       - popcnt
+      - sse2
+      - avx2
+      - aes
+      - ssse3
+      - bmi2
     common-crypto:
     - AES: pqcrystals-kyber_common_aes
     - SHA3: liboqs

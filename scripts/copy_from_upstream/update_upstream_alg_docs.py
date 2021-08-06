@@ -142,6 +142,17 @@ def update_upstream_kem_alg_docs(kems, upstream_info):
                     else:
                         impl['supported-platforms'] = rhs_if_not_equal(impl['supported-platforms'], "all", "supported-platforms")
 
+                    # Logic to add Common_META.yml components
+                    uir = get_upstream_info(upstream_yaml['implementations'], impl['upstream-id'])
+                    if (uir != None) and ('common_dep' in uir):
+                        upstream_common_path = upstream_meta_path.replace(scheme['pretty_name_full'], "Common")
+                        upstream_common_yaml = load_yaml(upstream_common_path)
+                        for c in uir['common_dep'].split(' '):
+                            ur = get_upstream_info(upstream_common_yaml['commons'], c)
+                            if (ur != None) and ('supported_platforms' in ur):
+                               if 'required_flags' in ur['supported_platforms'][0].keys():
+                                  impl['supported-platforms'][0]['required_flags']=list(set(impl['supported-platforms'][0]['required_flags']+ur['supported_platforms'][0]['required_flags']))
+
                     oqs_scheme_yaml['implementations'][impl_index] = impl
 
                 oqs_yaml['parameter-sets'][index] = oqs_scheme_yaml
@@ -204,6 +215,17 @@ def update_upstream_sig_alg_docs(sigs, upstream_info):
                         impl['supported-platforms'] = rhs_if_not_equal(impl['supported-platforms'], pqclean_impl['supported_platforms'], "supported-platforms")
                     else:
                         impl['supported-platforms'] = rhs_if_not_equal(impl['supported-platforms'], "all", "supported-platforms")
+
+                    # Logic to add Common_META.yml components
+                    uir = get_upstream_info(upstream_yaml['implementations'], impl['upstream-id'])
+                    if (uir != None) and ('common_dep' in uir):
+                        upstream_common_path = upstream_meta_path.replace(scheme['pretty_name_full'], "Common")
+                        upstream_common_yaml = load_yaml(upstream_common_path)
+                        for c in uir['common_dep'].split(' '):
+                            ur = get_upstream_info(upstream_common_yaml['commons'], c)
+                            if (ur != None) and ('supported_platforms' in ur):
+                               if 'required_flags' in ur['supported_platforms'][0].keys():
+                                  impl['supported-platforms'][0]['required_flags']=list(set(impl['supported-platforms'][0]['required_flags']+ur['supported_platforms'][0]['required_flags']))
 
                     oqs_scheme_yaml['implementations'][impl_index] = impl
 
