@@ -8,19 +8,7 @@ import subprocess
 import yaml
 import inspect
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--liboqs-root", default=os.path.join("..", ".."))
-parser.add_argument("-w", "--write-changes", dest="write_changes", action='store_true')
-parser.add_argument("-v", "--verbosity", type=int)
-args = parser.parse_args()
-
-if args.verbosity:
-    DEBUG = args.verbosity
-else:
-    DEBUG = 0
-
-if not args.write_changes:
-    print("--write-changes not set; changes will not be written out.")
+DEBUG = 0
 
 def shell(command, expect=0):
     subprocess_stdout = None if DEBUG > 0 else subprocess.DEVNULL
@@ -36,8 +24,8 @@ def store_yaml(filename, contents, encoding='utf-8'):
     with open(filename, mode='w', encoding=encoding) as fh:
         yaml.dump(contents, fh, sort_keys=False, allow_unicode=True)
 
-def fetch_upstream(upstream_info):
-    work_dir_root = os.path.join(args.liboqs_root, 'scripts', 'copy_from_upstream', 'repos')
+def fetch_upstream(liboqs_root, upstream_info):
+    work_dir_root = os.path.join(liboqs_root, 'scripts', 'copy_from_upstream', 'repos')
     os.makedirs(work_dir_root, exist_ok=True)
 
     work_dir = os.path.join(work_dir_root, upstream_info['name'])
@@ -79,12 +67,12 @@ def get_oqs_yaml(param_list, name):
     print(param_list)
     exit(1)
 
-# Merge documentation contained in args.liboqs_root/docs/algorithms/kem/kem['name'].yml with upstream information:
+# Merge documentation contained in liboqs_root/docs/algorithms/kem/kem['name'].yml with upstream information:
 # Args: 
 # kems: List of kems in copy_from_upstream.yml
 # upstream_info: Hashtable of upstream information (keyed by upstream source)
 #  incl. entry: 'upstream_root' pointing to local folder containing source code 
-def update_upstream_kem_alg_docs(kems, upstream_info):
+def update_upstream_kem_alg_docs(liboqs_root, kems, upstream_info, write_changes=False):
     for kem in kems:
         ui = get_upstream_info(upstream_info, kem['upstream_location'])
         upstream_root = ui['upstream_root']
@@ -92,7 +80,7 @@ def update_upstream_kem_alg_docs(kems, upstream_info):
         if DEBUG > 1:
             print("Working on KEM %s using path %s and META file %s" % (kem, upstream_root, meta_yaml_path_template))
         if True: # for all upstream sources:
-            oqs_yaml_path = os.path.join(args.liboqs_root, 'docs', 'algorithms', 'kem', '{}.yml'.format(kem['name']))
+            oqs_yaml_path = os.path.join(liboqs_root, 'docs', 'algorithms', 'kem', '{}.yml'.format(kem['name']))
             if os.path.isfile(oqs_yaml_path):
                oqs_yaml = load_yaml(oqs_yaml_path)
             else:
@@ -157,10 +145,10 @@ def update_upstream_kem_alg_docs(kems, upstream_info):
 
                 oqs_yaml['parameter-sets'][index] = oqs_scheme_yaml
 
-            if args.write_changes:
+            if write_changes:
                 store_yaml(oqs_yaml_path, oqs_yaml)
 
-def update_upstream_sig_alg_docs(sigs, upstream_info):
+def update_upstream_sig_alg_docs(liboqs_root, sigs, upstream_info, write_changes=False):
     for sig in sigs:
         ui = get_upstream_info(upstream_info, sig['upstream_location'])
         upstream_root = ui['upstream_root']
@@ -168,7 +156,7 @@ def update_upstream_sig_alg_docs(sigs, upstream_info):
         if DEBUG > 1:
             print("Working on SIG %s using path %s and META file %s" % (sig, upstream_root, meta_yaml_path_template))
         if True: # for all upstream sources:
-            oqs_yaml_path = os.path.join(args.liboqs_root, 'docs', 'algorithms', 'sig', '{}.yml'.format(sig['name']))
+            oqs_yaml_path = os.path.join(liboqs_root, 'docs', 'algorithms', 'sig', '{}.yml'.format(sig['name']))
             if os.path.isfile(oqs_yaml_path):
                oqs_yaml = load_yaml(oqs_yaml_path)
             else:
@@ -231,16 +219,37 @@ def update_upstream_sig_alg_docs(sigs, upstream_info):
 
                 oqs_yaml['parameter-sets'][index] = oqs_scheme_yaml
 
-            if args.write_changes:
+            if write_changes:
                 store_yaml(oqs_yaml_path, oqs_yaml)
 
-instructions = load_yaml(
-    os.path.join(args.liboqs_root, 'scripts', 'copy_from_upstream', 'copy_from_upstream.yml'),
-    encoding='utf-8')
+def do_it(liboqs_root):
+   if liboqs_root == None:
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--liboqs-root", default=os.path.join("..", ".."))
+      parser.add_argument("-w", "--write-changes", dest="write_changes", action='store_true')
+      parser.add_argument("-v", "--verbosity", type=int)
+      args = parser.parse_args()
 
-for upstream in instructions['upstreams']:
-  if 'git_url' in upstream.keys():
-    upstream['upstream_root'] = fetch_upstream(upstream)
+      if args.verbosity:
+          DEBUG = args.verbosity
 
-update_upstream_kem_alg_docs(instructions['kems'], instructions['upstreams'])
-update_upstream_sig_alg_docs(instructions['sigs'], instructions['upstreams'])
+      liboqs_root = args.liboqs_root
+      write_changes = args.write_changes
+   else:
+      write_changes = True
+
+   if not write_changes:
+       print("--write-changes not set; changes will not be written out.")
+   instructions = load_yaml(
+       os.path.join(liboqs_root, 'scripts', 'copy_from_upstream', 'copy_from_upstream.yml'),
+       encoding='utf-8')
+
+   for upstream in instructions['upstreams']:
+     if 'git_url' in upstream.keys():
+       upstream['upstream_root'] = fetch_upstream(liboqs_root, upstream)
+
+   update_upstream_kem_alg_docs(liboqs_root, instructions['kems'], instructions['upstreams'], write_changes)
+   update_upstream_sig_alg_docs(liboqs_root, instructions['sigs'], instructions['upstreams'], write_changes)
+
+if __name__ == "__main__":
+   do_it(None)
